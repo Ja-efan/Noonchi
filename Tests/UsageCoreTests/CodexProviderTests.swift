@@ -19,6 +19,20 @@ final class CodexProviderTests: XCTestCase {
 
     /// Same shape with the Pro Lite values a Codex session file recorded on 2026-10-07.
     /// The account is now on Free, so this one couldn't be recorded live.
+    func testPlanNames() throws {
+        func plan(_ id: String) throws -> String? {
+            let json = #"{"rateLimits":{"planType":"\#(id)","primary":{"usedPercent":1,"windowDurationMins":300}}}"#
+            return try CodexProvider.usage(from: Data(json.utf8)).get().plan
+        }
+        let expected = ["prolite": "Pro Lite",
+                        "self_serve_business_prolite": "Business", "self_serve_business_usage_based": "Business",
+                        "enterprise_cbp_automation": "Enterprise", "enterprise_cbp_usage_based": "Enterprise",
+                        "edu_plus": "Edu Plus", "edu_pro": "Edu Pro",
+                        "ent26": "ent26", "some_future_plan": "some_future_plan"]
+        for (id, name) in expected { XCTAssertEqual(try plan(id), name, id) }
+        XCTAssertNil(try plan("unknown"))
+    }
+
     func testProLiteWeeklyWindow() throws {
         let usage = try CodexProvider.usage(from: fixture("codex-prolite-weekly")).get()
         XCTAssertEqual(usage.plan, "Pro Lite")

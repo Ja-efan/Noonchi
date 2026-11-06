@@ -35,7 +35,10 @@ extension RateLimitsResponse {
         guard let plan = rateLimits.planType, plan != "unknown" else { return nil }
         let names = ["free": "Free", "go": "Go", "plus": "Plus", "pro": "Pro", "prolite": "Pro Lite",
                      "promax": "Pro Max", "team": "Team", "business": "Business",
-                     "enterprise": "Enterprise", "edu": "Edu"]
+                     "self_serve_business_prolite": "Business", "self_serve_business_usage_based": "Business",
+                     "enterprise": "Enterprise", "enterprise_cbp_automation": "Enterprise",
+                     "enterprise_cbp_usage_based": "Enterprise",
+                     "edu": "Edu", "edu_plus": "Edu Plus", "edu_pro": "Edu Pro"]
         return names[plan] ?? plan
     }
 }
