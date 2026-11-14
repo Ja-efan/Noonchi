@@ -62,29 +62,34 @@ public struct MenuBarItem: Equatable, Sendable {
 
 /// Menu bar content. Kept out of the app target so it can be tested.
 public enum MenuBarFormatter {
-    /// `selected` holds "provider:window" keys for custom mode, e.g. "claude:5h".
+    /// `selected` holds "provider:window" keys for custom mode, e.g. "claude:5h". Windows of
+    /// `hiddenGroups` are left out as if the service hadn't reported them, picked or not.
     public static func items(for services: [(id: ProviderID, state: ProviderState)], mode: MenuBarMode,
                              selected: [String], labeled: Bool, highlightHigh: Bool,
-                             value: MenuBarValue = .used) -> [MenuBarItem] {
+                             value: MenuBarValue = .used, hiddenGroups: [ProviderID: Set<String>] = [:]) -> [MenuBarItem] {
         services.compactMap { id, state in
+            let usage = state.usage?.hidingGroups(hiddenGroups[id] ?? [])
             let windowIDs: [String]
             switch mode {
             case .auto:
-                windowIDs = state.usage.flatMap(autoWindow).map { [$0.id] } ?? []
+                windowIDs = usage.flatMap(autoWindow).map { [$0.id] } ?? []
             case .custom:
                 let prefix = id.rawValue + ":"
-                let picked = selected.filter { $0.hasPrefix(prefix) }.map { String($0.dropFirst(prefix.count)) }
+                var picked = selected.filter { $0.hasPrefix(prefix) }.map { String($0.dropFirst(prefix.count)) }
                 if picked.isEmpty { return nil }
+                if let full = state.usage, let usage {
+                    picked.removeAll { full.window(id: $0) != nil && usage.window(id: $0) == nil }
+                }
                 // None of the picks exist any more (Ultra has no 5-hour limit): show something
                 // real rather than a lone dash.
-                if let usage = state.usage, !picked.contains(where: { usage.window(id: $0) != nil }),
+                if let usage, !picked.contains(where: { usage.window(id: $0) != nil }),
                    let window = autoWindow(usage) {
                     windowIDs = [window.id]
                 } else {
                     windowIDs = picked
                 }
             }
-            guard let usage = state.usage else {
+            guard let usage else {
                 return MenuBarItem(providerID: id, parts: [.init(text: state.error == nil ? "…" : "⚠︎", highlight: .none)], ringPercent: nil)
             }
             let windows = windowIDs.map { usage.window(id: $0) }

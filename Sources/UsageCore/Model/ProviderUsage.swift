@@ -26,6 +26,22 @@ public struct ProviderUsage: Equatable, Sendable {
     }
 
     public func window(id: String) -> UsageWindow? { windows.first { $0.id == id } }
+
+    /// The reading without the windows of `hidden` groups; what the panel and the menu bar show.
+    public func hidingGroups(_ hidden: Set<String>) -> ProviderUsage {
+        var copy = self
+        copy.windows.removeAll { $0.group.map(hidden.contains) ?? false }
+        return copy
+    }
+
+    /// Group titles and details in the reading's order.
+    public var groups: [(title: String, detail: String?)] {
+        var seen = Set<String>()
+        return windows.compactMap { w in
+            guard let title = w.group, seen.insert(title).inserted else { return nil }
+            return (title, w.groupDetail)
+        }
+    }
 }
 
 public enum ProviderError: Error, Equatable, Sendable {

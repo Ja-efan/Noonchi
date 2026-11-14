@@ -18,6 +18,11 @@ public struct UsageWindow: Identifiable, Equatable, Sendable {
     public let resetsAt: Date?
     /// The service's own reset wording, shown when `resetsAt` is nil.
     public let resetText: String?
+    /// The quota group this window belongs to, for services that share limits across models
+    /// (Antigravity's "Claude·GPT"). Nil for the others.
+    public let group: String?
+    /// What the group covers, e.g. its models.
+    public let groupDetail: String?
 
     /// Settings key for a rolling window: "5h", "week", "30d".
     public static func rollingID(minutes: Int) -> String {
@@ -47,11 +52,14 @@ public struct UsageWindow: Identifiable, Equatable, Sendable {
         return minutes < Int.max - 1 ? .rolling(minutes: minutes) : nil
     }
 
-    public init(id: String, kind: Kind, usedPercent: Double, resetsAt: Date? = nil, resetText: String? = nil) {
+    public init(id: String, kind: Kind, usedPercent: Double, resetsAt: Date? = nil, resetText: String? = nil,
+                group: String? = nil, groupDetail: String? = nil) {
         self.id = id
         self.kind = kind
         self.usedPercent = usedPercent
         self.resetsAt = resetsAt
         self.resetText = resetText
+        self.group = group
+        self.groupDetail = groupDetail
     }
 }

@@ -42,6 +42,7 @@ final class AppSettings: ObservableObject {
         static let barColor = "barColor"
         static let knownWindows = "knownWindows"
         static let disabled = "disabledProviders"
+        static let hiddenGroups = "panel.hiddenGroups"
         static let refreshMinutes = "refreshMinutes"
         static let askedAboutLaunchAtLogin = "launchAtLogin.asked"
         static let version = "settingsVersion"
@@ -58,6 +59,10 @@ final class AppSettings: ObservableObject {
     /// Nil means the system color.
     @Published var barColorHex: String? { didSet { defaults.set(barColorHex ?? "system", forKey: Key.barColor) } }
     @Published var disabledProviders: Set<String> { didSet { defaults.set(Array(disabledProviders), forKey: Key.disabled) } }
+    /// Quota groups left out of the panel and the menu bar, per service ID.
+    @Published var hiddenGroups: [String: Set<String>] {
+        didSet { defaults.set(hiddenGroups.mapValues { Array($0).sorted() }, forKey: Key.hiddenGroups) }
+    }
     @Published var refreshInterval: RefreshInterval { didSet { defaults.set(refreshInterval.minutes, forKey: Key.refreshMinutes) } }
     @Published var askedAboutLaunchAtLogin: Bool { didSet { defaults.set(askedAboutLaunchAtLogin, forKey: Key.askedAboutLaunchAtLogin) } }
     /// Window IDs seen per service and when, so they can be picked before the next refresh.
@@ -78,6 +83,7 @@ final class AppSettings: ObservableObject {
         highlightHigh = d.object(forKey: Key.highlightHigh) as? Bool ?? true
         barColorHex = d.string(forKey: Key.barColor).flatMap { $0 == "system" ? nil : $0 }
         disabledProviders = Set(d.stringArray(forKey: Key.disabled) ?? [])
+        hiddenGroups = (d.dictionary(forKey: Key.hiddenGroups) as? [String: [String]] ?? [:]).mapValues(Set.init)
         refreshInterval = RefreshInterval(saved: d.object(forKey: Key.refreshMinutes) as? Int)
         askedAboutLaunchAtLogin = d.bool(forKey: Key.askedAboutLaunchAtLogin)
         knownWindows = d.dictionary(forKey: Key.knownWindows) as? [String: [String: Date]] ?? [:]
@@ -112,6 +118,14 @@ final class AppSettings: ObservableObject {
         if on { disabledProviders.remove(id.rawValue) } else { disabledProviders.insert(id.rawValue) }
     }
 
+    func isGroupShown(_ id: ProviderID, _ group: String) -> Bool { !(hiddenGroups[id.rawValue]?.contains(group) ?? false) }
+
+    func toggleGroup(_ id: ProviderID, _ group: String) {
+        var hidden = hiddenGroups[id.rawValue] ?? []
+        if hidden.remove(group) == nil { hidden.insert(group) }
+        hiddenGroups[id.rawValue] = hidden.isEmpty ? nil : hidden
+    }
+
     // MARK: Menu bar items
 
     func isSelected(_ id: ProviderID, _ window: String) -> Bool { menuBarItems.contains("\(id.rawValue):\(window)") }
@@ -129,14 +143,18 @@ final class AppSettings: ObservableObject {
         if seen != knownWindows[id.rawValue] { knownWindows[id.rawValue] = seen }
     }
 
-    /// Windows that can be picked for a service, short to long.
-    func choices(for id: ProviderID) -> [String] {
-        (knownWindows[id.rawValue] ?? [:]).keys.sorted { UsageWindow.sortKey(id: $0) < UsageWindow.sortKey(id: $1) }
+    /// Windows that can be picked for a service, short to long, or in `order` first when given.
+    func choices(for id: ProviderID, order: [String] = []) -> [String] {
+        (knownWindows[id.rawValue] ?? [:]).keys.sorted { a, b in
+            let (i, j) = (order.firstIndex(of: a) ?? .max, order.firstIndex(of: b) ?? .max)
+            return i != j ? i < j : UsageWindow.sortKey(id: a) < UsageWindow.sortKey(id: b)
+        }
     }
 
     func menuBarItems(for store: UsageStore) -> [MenuBarItem] {
         MenuBarFormatter.items(for: store.shown.map { ($0.id, store.states[$0.id] ?? ProviderState()) },
-                               mode: menuBarMode, selected: menuBarItems, labeled: labeled, highlightHigh: highlightHigh, value: menuBarValue)
+                               mode: menuBarMode, selected: menuBarItems, labeled: labeled, highlightHigh: highlightHigh, value: menuBarValue,
+                               hiddenGroups: Dictionary(uniqueKeysWithValues: hiddenGroups.map { (ProviderID($0.key), $0.value) }))
     }
 
     // MARK: Colors

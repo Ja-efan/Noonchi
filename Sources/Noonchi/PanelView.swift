@@ -70,11 +70,12 @@ struct ProviderSection: View {
 
     var body: some View {
         let s = settings.strings
+        let usage = state.usage?.hidingGroups(settings.hiddenGroups[provider.id.rawValue] ?? [])
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
                 HStack(spacing: 6) {
                     ProviderGlyph(provider: provider, style: settings.iconStyle,
-                                  percent: state.usage.flatMap(MenuBarFormatter.autoWindow)?.usedPercent)
+                                  percent: usage.flatMap(MenuBarFormatter.autoWindow)?.usedPercent)
                     Text(provider.displayName)
                 }
                 .font(.system(size: 13, weight: .semibold))
@@ -83,13 +84,13 @@ struct ProviderSection: View {
             }
             .padding(.bottom, 6)
 
-            if let usage = state.usage {
+            if let usage {
                 let width = labelWidth(usage.windows.map { s.windowLabel($0.kind) })
                 ForEach(usage.windows) {
                     WindowRow(window: $0, stale: state.isStale, labelWidth: width, settings: settings)
                 }
             }
-            if !state.isStale, let usage = state.usage {
+            if !state.isStale, let usage {
                 PaceLine(usage: usage, provider: provider.id, paceModel: paceModel, settings: settings)
             }
             if let error = state.error {

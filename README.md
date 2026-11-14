@@ -54,7 +54,7 @@ If you picked menu bar items in v0.3, they move to Custom so the menu bar looks 
 
 - **Claude Code**: at each refresh, it runs `claude` in a pseudo-terminal (PTY) in the background with your MCP servers turned off for that run (`--strict-mcp-config`), sends `/usage`, reads the screen once the refresh is done, and quits it. It never calls a model, so **it uses no tokens.** Claude Code runs in `~/Library/Application Support/Noonchi`.
 - **Codex**: at each refresh, it runs `codex app-server`, asks `account/rateLimits/read`, and quits it. It never calls `account/read` (which returns your email), and it drops the account ID from the response.
-- **Antigravity**: at each refresh, it runs `agy -p /usage --output-format json`, which answers without calling a model. When you're signed out, the CLI would open a browser to sign in; Noonchi stops it and shows "Not logged in" instead.
+- **Antigravity**: at each refresh, it runs `agy -p /usage --output-format json`, which answers without calling a model. When you're signed out, the CLI would open a browser to sign in; Noonchi stops it and shows "Not logged in" instead. You can hide any of its quota groups (Gemini (Hydrogen), Claude·GPT, Argon) from the panel and the menu bar in Settings › Services.
 - It refreshes at the interval you set, on launch, on wake from sleep, and when the screen comes back. Each service reads on its own, so a slow one doesn't hold up the other. If a refresh fails, the last values stay, dimmed, with a one-line reason.
 - Services that aren't installed aren't polled or shown.
 

@@ -163,15 +163,36 @@ private struct ServiceSettings: View {
                     }
                     .disabled(path == nil)
 
+                    let usage = store.states[provider.id]?.usage
+                    let groups = usage?.groups ?? []
+                    if path != nil, settings.isEnabled(provider.id), !groups.isEmpty || (usage == nil && provider is AntigravityProvider) {
+                        LabeledContent(s.panelGroups) {
+                            if groups.isEmpty {
+                                Text(s.afterFirstRefresh).font(.caption).foregroundStyle(.secondary)
+                            } else {
+                                HStack(spacing: 6) {
+                                    ForEach(groups, id: \.title) { group in
+                                        chip(group.title, on: settings.isGroupShown(provider.id, group.title)) {
+                                            settings.toggleGroup(provider.id, group.title)
+                                        }
+                                        .help(group.detail ?? group.title)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if settings.menuBarMode == .custom, path != nil, settings.isEnabled(provider.id) {
                         LabeledContent(s.menuBarItems) {
-                            let choices = settings.choices(for: provider.id)
+                            let choices = settings.choices(for: provider.id, order: groups.isEmpty ? [] : usage?.windows.map(\.id) ?? [])
                             if choices.isEmpty {
                                 Text(s.afterFirstRefresh).font(.caption).foregroundStyle(.secondary)
                             } else {
                                 HStack(spacing: 6) {
                                     ForEach(choices, id: \.self) { window in
-                                        chip(provider.id, window)
+                                        chip(s.windowLabel(id: window), on: settings.isSelected(provider.id, window)) {
+                                            settings.toggle(provider.id, window)
+                                        }
                                     }
                                 }
                             }
@@ -183,12 +204,9 @@ private struct ServiceSettings: View {
         .formStyle(.grouped)
     }
 
-    private func chip(_ id: ProviderID, _ window: String) -> some View {
-        let on = settings.isSelected(id, window)
-        return Button {
-            settings.toggle(id, window)
-        } label: {
-            Text(s.windowLabel(id: window))
+    private func chip(_ title: String, on: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title)
                 .font(.system(size: 11))
                 .padding(.horizontal, 8).padding(.vertical, 2)
                 .foregroundStyle(on ? Color(nsColor: .windowBackgroundColor) : .primary)
