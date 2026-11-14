@@ -57,10 +57,55 @@ final class AntigravityProviderTests: XCTestCase {
           {"name":"Gemini Models","buckets":[{"id":"gemini-weekly","window":"weekly","remaining_fraction":1}]}]}}}
         """#
         let windows = try usage(json).get().windows
-        XCTAssertEqual(windows.map(\.id), ["model:Gemini (Hydrogen) 5h", "model:Gemini (Hydrogen)", "model:Carbon 5h",
-                                           "model:Carbon", "model:Gemini (Hydrogen) 2"])
-        XCTAssertEqual(windows[2].usedPercent, 20, accuracy: 0.001)
-        XCTAssertEqual(windows[3].group, "Carbon")
+        XCTAssertEqual(windows.map(\.id), ["model:Gemini (Hydrogen) 5h", "model:Gemini (Hydrogen)", "model:Gemini (Hydrogen) 2",
+                                           "model:Carbon 5h", "model:Carbon"])
+        XCTAssertEqual(windows[2].group, "Gemini (Hydrogen)")
+        XCTAssertEqual(windows[3].usedPercent, 20, accuracy: 0.001)
+        XCTAssertEqual(windows[4].group, "Carbon")
+    }
+
+    func testBlankCarbonGroupMergesWithNamedCarbonGroupAfterFixture() throws {
+        var root = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: fixtureURL())) as? [String: Any])
+        var command = try XCTUnwrap(root["command"] as? [String: Any])
+        var data = try XCTUnwrap(command["data"] as? [String: Any])
+        var groups = try XCTUnwrap(data["groups"] as? [[String: Any]])
+        groups.append([
+            "name": "Gemini 4 Carbon",
+            "buckets": [["id": "gemini-carbon-wtu-weekly", "window": "weekly", "remaining_fraction": 0.75]],
+        ])
+        groups.append([
+            "name": " ",
+            "buckets": [["id": "gemini-carbon-5h", "window": "5h", "remaining_fraction": 0.6]],
+        ])
+        data["groups"] = groups
+        command["data"] = data
+        root["command"] = command
+        let encoded = try JSONSerialization.data(withJSONObject: root)
+
+        let usage = try AntigravityProvider.usage(from: encoded).get()
+        let ids = usage.windows.map(\.id)
+        XCTAssertEqual(Set(ids).count, ids.count)
+
+        let carbon = usage.windows.filter { $0.group == "Carbon" }
+        XCTAssertEqual(carbon.map(\.id), ["model:Carbon 5h", "model:Carbon"])
+        XCTAssertEqual(carbon.map(\.kind), [.model(name: "Carbon 5h", minutes: 300), .model(name: "Carbon", minutes: 10080)])
+        XCTAssertEqual(usage.groups.map(\.title), ["Gemini (Hydrogen)", "Claude·GPT", "Argon", "Carbon"])
+    }
+
+    func testBlankGroupNameDerivesTitleFromFirstBucketID() throws {
+        let unknown = try usage(group("   ", #"{"id":"foo-5h","window":"5h","remaining_fraction":0.5}"#)).get()
+        XCTAssertEqual(unknown.windows.map(\.group), ["foo-5h"])
+        XCTAssertEqual(unknown.windows.map(\.id), ["model:foo-5h 5h"])
+        XCTAssertEqual(unknown.groups.map(\.title), ["foo-5h"])
+
+        let json = #"""
+        {"status":"SUCCESS","command":{"data":{"groups":[
+          {"name":"","buckets":[{"id":"gemini-argon-wtu-weekly","window":"weekly","remaining_fraction":1}]},
+          {"name":"\t\n","buckets":[{"id":"3p-5h","window":"5h","remaining_fraction":1}]},
+          {"name":" ","buckets":[{"id":"gemini-5h","window":"5h","remaining_fraction":1}]}]}}}
+        """#
+        let known = try usage(json).get()
+        XCTAssertEqual(known.groups.map(\.title), ["Argon", "Claude·GPT", "Gemini (Hydrogen)"])
     }
 
     func testUnknownGroupAndWindowKeepTheirOwnNames() throws {
