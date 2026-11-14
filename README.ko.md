@@ -2,7 +2,7 @@
 
 [English](README.md) | **한국어**
 
-Claude Code와 Codex의 **사용 한도**를 macOS 상단 바에 숫자로 보여주는 앱입니다. 패널에서는 서비스마다 모든 한도(5시간, 주간, Fable 같은 모델별 주간, Codex의 30일 등)와 초기화 시각을 한 줄씩 보여줍니다.
+Claude Code, Codex, Antigravity의 **사용 한도**를 macOS 상단 바에 숫자로 보여주는 앱입니다. 패널에서는 서비스마다 모든 한도(5시간, 주간, Fable 같은 모델별 주간, Codex의 30일 등)와 초기화 시각을 한 줄씩 보여줍니다.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/images/panel-ko-dark.png">
@@ -14,7 +14,7 @@ Claude Code와 Codex의 **사용 한도**를 macOS 상단 바에 숫자로 보�
 ## 특징
 
 - **숫자가 상단 바에 바로 보입니다.** 기본값은 서비스마다 5시간 한도 하나이고(5시간 한도가 없으면 가장 짧은 한도), 80% 이상이면 주황, 95% 이상이면 빨강으로 바뀝니다.
-- **인증 정보를 읽지 않습니다.** 키체인, 브라우저 쿠키, `~/.claude`·`~/.codex`의 인증 파일, 대화 로그 어디에도 접근하지 않습니다. 공식 `claude`·`codex` CLI가 보여주는 값을 씁니다.
+- **인증 정보를 읽지 않습니다.** 키체인, 브라우저 쿠키, `~/.claude`·`~/.codex`의 인증 파일, 대화 로그 어디에도 접근하지 않습니다. 공식 `claude`·`codex`·`agy` CLI가 보여주는 값을 씁니다.
 - **요청할 때만 인터넷에 연결합니다.** 사용량은 각 CLI가 서버와 통신해 가져옵니다. 앱은 업데이트 확인이나 설치를 누를 때만 GitHub에 연결하고, 사용자 정보는 보내지 않습니다.
 - **화면 갱신까지 반영해 읽습니다.** Claude Code의 `/usage`는 캐시 값을 먼저 그린 뒤 바뀐 숫자만 덮어씁니다. Noonchi는 출력을 가상 터미널 화면에 다시 그려 최종 값을 읽습니다. 실측 30회 중 23회에서 이전 방식(출력 문자열만 읽기)이 갱신 전 값을 읽었고, 지금 방식은 30회 모두 Claude Code 화면과 일치했습니다.
 - **한도에 먼저 닿을 것 같으면 알려줍니다.** 지금까지의 속도로 초기화 전에 한도에 닿을 때만 패널에 한 줄("이 속도면 3:10 PM쯤 5시간 한도에 닿아요")을 띄웁니다. 기록을 남기지 않고 현재 값만으로 계산합니다.
@@ -52,16 +52,17 @@ v0.3에서 상단 바 항목을 직접 골랐다면 업데이트 후에도 같�
 
 - **Claude Code**: 조회할 때마다 백그라운드에서 `claude`를 가상 터미널(PTY)로 실행해 `/usage`를 보내고(그 실행에서는 MCP 서버를 켜지 않습니다, `--strict-mcp-config`), 갱신이 끝난 화면을 읽은 뒤 바로 종료합니다. 모델을 호출하지 않으므로 **토큰을 쓰지 않습니다.** 작업 폴더는 `~/Library/Application Support/Noonchi`입니다.
 - **Codex**: 조회할 때마다 `codex app-server`를 실행해 `account/rateLimits/read`로 한도를 묻고 종료합니다. 이메일을 돌려주는 `account/read`는 호출하지 않고, 응답의 계정 ID는 지운 뒤 씁니다.
+- **Antigravity**: 조회할 때마다 `agy -p /usage --output-format json`을 실행합니다. 모델을 호출하지 않습니다. 로그인되어 있지 않으면 CLI가 로그인용 브라우저를 열려고 하는데, Noonchi는 이를 막고 "로그인 필요"로 표시합니다.
 - 설정한 주기마다, 그리고 앱을 켤 때, 잠자기에서 깨어날 때, 화면이 다시 켜질 때 조회합니다. 서비스마다 따로 읽으므로 한쪽이 느려도 다른 쪽은 갱신됩니다. 조회에 실패하면 마지막으로 읽은 값을 흐리게 두고 이유를 한 줄 표시합니다.
 - 설치되지 않은 서비스는 조회하지 않고 패널에도 나오지 않습니다.
 
 ## 요구 사항
 
 - macOS 14 이상, Apple Silicon(arm64)
-- Claude Code(Pro/Max 구독) 또는 Codex(ChatGPT 로그인) 중 하나 이상 설치 및 로그인
+- Claude Code(Pro/Max 구독), Codex(ChatGPT 로그인), Antigravity(Google 로그인) 중 하나 이상 설치 및 로그인
 - 빌드 시 Xcode 또는 Command Line Tools (Swift 5.9+)
 
-`claude`는 `~/.local/bin`, `~/.claude/local`, `/opt/homebrew/bin`, `/usr/local/bin` 순서로, `codex`는 `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin`, `~/.npm-global/bin` 순서로 찾습니다. 다른 곳에 있다면 `NOONCHI_CLAUDE_PATH`, `NOONCHI_CODEX_PATH` 환경 변수로 지정하세요.
+`claude`는 `~/.local/bin`, `~/.claude/local`, `/opt/homebrew/bin`, `/usr/local/bin` 순서로, `codex`는 `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin`, `~/.npm-global/bin` 순서로, `agy`는 `~/.local/bin`, `/opt/homebrew/bin`, `/usr/local/bin` 순서로 찾습니다. 다른 곳에 있다면 `NOONCHI_CLAUDE_PATH`, `NOONCHI_CODEX_PATH`, `NOONCHI_AGY_PATH` 환경 변수로 지정하세요.
 
 ## 설치
 
@@ -104,6 +105,7 @@ Sources/
     Providers/            UsageProvider 프로토콜과 등록 목록
       ClaudeCode/           PTY로 claude 실행, /usage 전송, 사용률·플랜·초기화 시간 파싱
       Codex/                codex app-server에 JSON-RPC로 한도 조회
+      Antigravity/          agy -p /usage 실행, JSON 해석
     Runtime/              PTY 프로세스, JSON-RPC 프로세스, 가상 화면 재현, ANSI 정리
     Presentation/         상단 바 문구, 강조 규칙, 도달 예측, 설정 이전
   Noonchi/              SwiftUI 메뉴 막대 앱 (패널, 상단 바 이미지, 설정, 다국어 문구)

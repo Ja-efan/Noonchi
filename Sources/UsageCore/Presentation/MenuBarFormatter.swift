@@ -97,13 +97,17 @@ public enum MenuBarFormatter {
         }
     }
 
-    /// The 5-hour window, else the shortest rolling one, else the first.
+    /// The 5-hour window, else the shortest rolling one, else the shortest window of known
+    /// length (the most used on a tie, as Antigravity has one 5-hour cap per model group),
+    /// else the first.
     public static func autoWindow(_ usage: ProviderUsage) -> UsageWindow? {
         if let w = usage.window(id: "5h") { return w }
         let rolling = usage.windows.compactMap { w -> (UsageWindow, Int)? in
             if case .rolling(let m) = w.kind { return (w, m) } else { return nil }
         }
-        return rolling.min { $0.1 < $1.1 }?.0 ?? usage.windows.first
+        if let shortest = rolling.min(by: { $0.1 < $1.1 }) { return shortest.0 }
+        let timed = usage.windows.compactMap { w in w.kind.minutes.map { (w, $0) } }
+        return timed.min { ($0.1, -$0.0.usedPercent) < ($1.1, -$1.0.usedPercent) }?.0 ?? usage.windows.first
     }
 
     /// Label for a window known only by its ID (selected but missing from the reading).

@@ -17,7 +17,7 @@ struct Strings {
     var settingsMenu: String { t("설정…", "Settings…") }
     var quit: String { t("Noonchi 종료", "Quit Noonchi") }
     var showRawOutput: String { t("원본 출력 보기", "Show raw output") }
-    var noProviders: String { t("Claude Code나 Codex를 찾지 못했어요", "Couldn't find Claude Code or Codex") }
+    var noProviders: String { t("Claude Code, Codex, Antigravity를 찾지 못했어요", "Couldn't find Claude Code, Codex, or Antigravity") }
 
     /// "5시간", "주간", "30일", or the model name.
     func windowLabel(_ kind: UsageWindow.Kind) -> String {

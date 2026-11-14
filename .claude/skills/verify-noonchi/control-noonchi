@@ -83,7 +83,18 @@ while read -r -t 25 line; do
   esac
 done
 FAKE
-  chmod +x "$run/bin/claude" "$run/bin/codex"
+  cat > "$run/bin/agy" <<FAKE
+#!/bin/bash
+if [ "\$(cat "$run/state/agy.mode")" = not-logged-in ]; then
+  echo 'Authentication required. Please visit the URL to log in:' >&2
+  echo 'https://example.invalid/login' >&2
+  # The app puts a no-op open first in PATH; this checks that it did.
+  open https://example.invalid
+  exec sleep 60
+fi
+cat "$run/state/agy.json"
+FAKE
+  chmod +x "$run/bin/claude" "$run/bin/codex" "$run/bin/agy"
 }
 
 # set-claude 5h=86 week=24 Fable=9 [note=rate-limited] | set-claude not-logged-in | set-claude hang
@@ -127,6 +138,32 @@ print(json.dumps({"accountId": "fake-account-id", "rateLimits": limits}))
 PY
 }
 
+# set-agy gemini5h=30 gemini=20 3p5h=60 3p=40 argon=10 (used percents) | set-agy not-logged-in
+cmd_set_agy() {
+  local run; run="$(run_dir)"; local state="$run/state"
+  if [ "${1:-}" = not-logged-in ]; then echo not-logged-in > "$state/agy.mode"; return; fi
+  echo ok > "$state/agy.mode"
+  python3 - "$@" > "$state/agy.json" <<'PY'
+import json, sys, time
+used = {"gemini5h": 0, "gemini": 0, "3p5h": 0, "3p": 0, "argon": 0}
+for pair in sys.argv[1:]:
+    key, value = pair.split("=")
+    if key not in used: sys.exit(f"unknown agy window: {key}")
+    used[key] = float(value)
+now = time.time()
+def bucket(id, key, window):
+    reset = now + (5 * 3600 if window == "5h" else 7 * 86400) / 2
+    return {"id": id, "name": "Limit Remaining", "window": window, "remaining_fraction": 1 - used[key] / 100,
+            "reset_time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(reset))}
+groups = [
+    {"name": "Gemini Models", "buckets": [bucket("gemini-weekly", "gemini", "weekly"), bucket("gemini-5h", "gemini5h", "5h")]},
+    {"name": "Claude and GPT models", "buckets": [bucket("3p-weekly", "3p", "weekly"), bucket("3p-5h", "3p5h", "5h")]},
+    {"name": "Gemini 4 Argon", "buckets": [bucket("gemini-argon-wtu-weekly", "argon", "weekly")]},
+]
+print(json.dumps({"conversation_id": "", "status": "SUCCESS", "command": {"name": "usage", "data": {"groups": groups}}}))
+PY
+}
+
 # start [key=value ...]: optional settings written before launch, e.g. language=ko menuBar.mode=custom
 cmd_start() {
   [ -x "$APP/Contents/MacOS/Noonchi" ] || die "not built; use: control-noonchi build"
@@ -147,6 +184,7 @@ cmd_start() {
   echo "Claude Max" > "$run/state/claude.plan"
   cmd_set_claude 5h=5 week=26 Fable=2
   cmd_set_codex free=7
+  cmd_set_agy gemini5h=12 gemini=8 3p5h=30 3p=15 argon=3
   # UserDefaults go through cfprefsd to the real home, under this build's own bundle ID,
   # so they don't follow CFFIXED_USER_HOME. Start each run from a clean domain.
   defaults delete "$BUNDLE_ID" >/dev/null 2>&1 || true
@@ -167,6 +205,7 @@ cmd_start() {
   stat -f %m "$HOME/Library/Preferences/io.github.ja-efan.noonchi.plist" > "$run/real-settings-mtime" 2>/dev/null || true
   env CFFIXED_USER_HOME="$run/home" HOME="$run/home" NOONCHI_VERIFY_DIR="$run/ctl" \
       NOONCHI_CLAUDE_PATH="$run/bin/claude" NOONCHI_CODEX_PATH="$run/bin/codex" \
+      NOONCHI_AGY_PATH="$run/bin/agy" \
       NOONCHI_UPDATE_FEED="http://127.0.0.1:$port/latest.json" \
       "$run/Applications/NoonchiVerify.app/Contents/MacOS/Noonchi" > "$run/app.log" 2>&1 &
   echo $! > "$run/pid"
@@ -382,11 +421,12 @@ case "$command" in
   settings) cmd_settings ;;
   set-claude) cmd_set_claude "$@" ;;
   set-codex) cmd_set_codex "$@" ;;
+  set-agy) cmd_set_agy "$@" ;;
   set-plan) echo "$*" > "$(run_dir)/state/claude.plan" ;;
   shot) cmd_shot "$@" ;;
   region) cmd_region "$@" ;;
   gap) cmd_gap ;;
   stop) cmd_stop ;;
   evidence) evidence ;;
-  *) echo "usage: control-noonchi build|start [key=value...]|doctor|send <cmd>|open-panel|close-panel|open-settings [tab]|close-settings|set-update <version> [kind]|open-update|wait-new-app|refresh|press-refresh|state|keyboard|settings|wait-idle|set-claude ...|set-codex ...|set-plan <text>|shot <name>|region <name>|gap|evidence|stop" >&2; exit 2 ;;
+  *) echo "usage: control-noonchi build|start [key=value...]|doctor|send <cmd>|open-panel|close-panel|open-settings [tab]|close-settings|set-update <version> [kind]|open-update|wait-new-app|refresh|press-refresh|state|keyboard|settings|wait-idle|set-claude ...|set-codex ...|set-agy ...|set-plan <text>|shot <name>|region <name>|gap|evidence|stop" >&2; exit 2 ;;
 esac

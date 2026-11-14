@@ -16,5 +16,5 @@ public protocol UsageProvider: Sendable {
 }
 
 public enum Providers {
-    public static let all: [any UsageProvider] = [ClaudeCodeProvider(), CodexProvider()]
+    public static let all: [any UsageProvider] = [ClaudeCodeProvider(), CodexProvider(), AntigravityProvider()]
 }

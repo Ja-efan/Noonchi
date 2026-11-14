@@ -79,16 +79,8 @@ public final class JSONRPCProcess {
     public func finish() {
         output.fileHandleForReading.readabilityHandler = nil
         try? input.fileHandleForWriting.close()
-        let process = self.process
-        DispatchQueue.global(qos: .background).async {
-            // Exits on its own once stdin closes; escalate if it doesn't.
-            for signal in [0, SIGTERM, SIGKILL] {
-                if signal != 0, process.isRunning { kill(process.processIdentifier, signal) }
-                let deadline = Date().addingTimeInterval(1)
-                while process.isRunning, Date() < deadline { usleep(50_000) }
-                if !process.isRunning { return }
-            }
-        }
+        // Exits on its own once stdin closes.
+        process.stopInBackground()
     }
 
     private func send(_ message: [String: Any]) throws {
@@ -108,6 +100,21 @@ public final class JSONRPCProcess {
             }
             if closed { throw JSONRPCError.closed }
             if !lock.wait(until: deadline) { throw JSONRPCError.timeout }
+        }
+    }
+}
+
+extension Process {
+    /// Gives the process a second to exit on its own, then escalates to SIGTERM and SIGKILL.
+    func stopInBackground() {
+        let process = self
+        DispatchQueue.global(qos: .background).async {
+            for signal in [0, SIGTERM, SIGKILL] {
+                if signal != 0, process.isRunning { kill(process.processIdentifier, signal) }
+                let deadline = Date().addingTimeInterval(1)
+                while process.isRunning, Date() < deadline { usleep(50_000) }
+                if !process.isRunning { return }
+            }
         }
     }
 }

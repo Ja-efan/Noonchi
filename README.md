@@ -2,7 +2,7 @@
 
 **English** | [한국어](README.ko.md)
 
-*Noonchi* (눈치) is the Korean knack for reading the room. This app reads your Claude Code and Codex usage limits so you can see them before you hit them.
+*Noonchi* (눈치) is the Korean knack for reading the room. This app reads your Claude Code, Codex, and Antigravity usage limits so you can see them before you hit them.
 
 Noonchi shows the limits as numbers in the macOS menu bar. The panel lists every limit of each service on one line — 5-hour, weekly, per-model weekly caps such as Fable, Codex's 30-day window — with its reset time.
 
@@ -16,7 +16,7 @@ Noonchi shows the limits as numbers in the macOS menu bar. The panel lists every
 ## Features
 
 - **The numbers are right in the menu bar.** By default each service shows its 5-hour limit (or its shortest one if it has none). It turns orange at 80% and red at 95%.
-- **It never reads your credentials.** No Keychain, no browser cookies, no auth files under `~/.claude` or `~/.codex`, no conversation logs. It uses what the official `claude` and `codex` CLIs report.
+- **It never reads your credentials.** No Keychain, no browser cookies, no auth files under `~/.claude` or `~/.codex`, no conversation logs. It uses what the official `claude`, `codex`, and `agy` CLIs report.
 - **The app only goes online when you ask.** Only the CLIs talk to their servers for usage. The app connects to GitHub only when you choose Check for Updates or Install, and it sends nothing about you.
 - **It reads the screen after it finishes updating.** Claude Code's `/usage` first draws cached numbers, then overwrites only the digits that changed. Noonchi replays the output on an emulated terminal screen and reads the final values. In 30 real captures, the old approach (reading the output as plain text) returned the pre-refresh value 23 times; the current approach matched Claude Code's screen all 30 times.
 - **It warns you when you're on track to hit a limit.** Only when your pace so far would reach a limit before it resets, the panel shows one line ("On pace to hit the 5-hour limit by 3:10 PM"). It keeps no history; it works from the current values.
@@ -54,16 +54,17 @@ If you picked menu bar items in v0.3, they move to Custom so the menu bar looks 
 
 - **Claude Code**: at each refresh, it runs `claude` in a pseudo-terminal (PTY) in the background with your MCP servers turned off for that run (`--strict-mcp-config`), sends `/usage`, reads the screen once the refresh is done, and quits it. It never calls a model, so **it uses no tokens.** Claude Code runs in `~/Library/Application Support/Noonchi`.
 - **Codex**: at each refresh, it runs `codex app-server`, asks `account/rateLimits/read`, and quits it. It never calls `account/read` (which returns your email), and it drops the account ID from the response.
+- **Antigravity**: at each refresh, it runs `agy -p /usage --output-format json`, which answers without calling a model. When you're signed out, the CLI would open a browser to sign in; Noonchi stops it and shows "Not logged in" instead.
 - It refreshes at the interval you set, on launch, on wake from sleep, and when the screen comes back. Each service reads on its own, so a slow one doesn't hold up the other. If a refresh fails, the last values stay, dimmed, with a one-line reason.
 - Services that aren't installed aren't polled or shown.
 
 ## Requirements
 
 - macOS 14 or later, Apple Silicon (arm64)
-- Claude Code (Pro/Max subscription) or Codex (ChatGPT sign-in), installed and signed in
+- Claude Code (Pro/Max subscription), Codex (ChatGPT sign-in), or Antigravity (Google sign-in), installed and signed in
 - Xcode or the Command Line Tools to build (Swift 5.9+)
 
-Noonchi looks for `claude` in `~/.local/bin`, `~/.claude/local`, `/opt/homebrew/bin`, and `/usr/local/bin`, and for `codex` in `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin`, and `~/.npm-global/bin`, in that order. If yours is elsewhere, set `NOONCHI_CLAUDE_PATH` or `NOONCHI_CODEX_PATH`.
+Noonchi looks for `claude` in `~/.local/bin`, `~/.claude/local`, `/opt/homebrew/bin`, and `/usr/local/bin`, for `codex` in `/opt/homebrew/bin`, `/usr/local/bin`, `~/.local/bin`, and `~/.npm-global/bin`, and for `agy` in `~/.local/bin`, `/opt/homebrew/bin`, and `/usr/local/bin`, in that order. If yours is elsewhere, set `NOONCHI_CLAUDE_PATH`, `NOONCHI_CODEX_PATH`, or `NOONCHI_AGY_PATH`.
 
 ## Install
 
@@ -106,6 +107,7 @@ Sources/
     Providers/            UsageProvider protocol and registry
       ClaudeCode/           Runs claude in a PTY, sends /usage, parses usage, plan, and reset times
       Codex/                Asks codex app-server for rate limits over JSON-RPC
+      Antigravity/          Runs agy -p /usage and decodes its JSON
     Runtime/              PTY process, JSON-RPC process, screen replay, ANSI cleanup
     Presentation/         Menu bar text, highlight rule, pace prediction, settings migration
   Noonchi/              SwiftUI menu bar app (panel, menu bar image, settings, localized strings)

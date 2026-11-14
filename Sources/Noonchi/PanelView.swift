@@ -5,6 +5,7 @@ import UsageCore
 struct WindowRow: View {
     let window: UsageWindow
     let stale: Bool
+    let labelWidth: CGFloat
     @ObservedObject var settings: AppSettings
 
     var body: some View {
@@ -14,7 +15,7 @@ struct WindowRow: View {
             Text(s.windowLabel(window.kind))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-                .frame(width: 46, alignment: .leading)
+                .frame(width: labelWidth, alignment: .leading)
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Color.primary.opacity(0.1))
@@ -83,7 +84,10 @@ struct ProviderSection: View {
             .padding(.bottom, 6)
 
             if let usage = state.usage {
-                ForEach(usage.windows) { WindowRow(window: $0, stale: state.isStale, settings: settings) }
+                let width = labelWidth(usage.windows.map { s.windowLabel($0.kind) })
+                ForEach(usage.windows) {
+                    WindowRow(window: $0, stale: state.isStale, labelWidth: width, settings: settings)
+                }
             }
             if !state.isStale, let usage = state.usage {
                 PaceLine(usage: usage, provider: provider.id, paceModel: paceModel, settings: settings)
@@ -103,6 +107,14 @@ struct ProviderSection: View {
         .padding(.horizontal, 14)
         .padding(.top, 12)
         .padding(.bottom, 10)
+    }
+
+    /// One width for the whole service keeps its bars aligned; long labels like
+    /// "Claude·GPT 5h" would be cut at the usual 46.
+    private func labelWidth(_ labels: [String]) -> CGFloat {
+        let font = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        let widest = labels.map { ($0 as NSString).size(withAttributes: [.font: font]).width }.max() ?? 0
+        return max(46, ceil(widest))
     }
 
     private func meta(_ s: Strings) -> String {

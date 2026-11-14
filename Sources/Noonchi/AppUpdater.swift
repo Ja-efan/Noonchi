@@ -31,7 +31,8 @@ final class AppUpdater: ObservableObject {
             allowsDownload = { _ in true }
         }
         // `open` drops the environment, and the relaunched copy has to stay isolated.
-        let kept = ["CFFIXED_USER_HOME", "HOME", "NOONCHI_VERIFY_DIR", "NOONCHI_CLAUDE_PATH", "NOONCHI_CODEX_PATH", "NOONCHI_UPDATE_FEED"]
+        let kept = ["CFFIXED_USER_HOME", "HOME", "NOONCHI_VERIFY_DIR", "NOONCHI_CLAUDE_PATH", "NOONCHI_CODEX_PATH",
+                    "NOONCHI_AGY_PATH", "NOONCHI_UPDATE_FEED"]
         openArguments = kept.flatMap { key in env[key].map { ["--env", "\(key)=\($0)"] } ?? [] }
 #endif
     }

@@ -17,10 +17,10 @@ Settings > Services lists each service with its path and a switch. Turning one o
 
 Preconditions: `$C start` has returned.
 
-- **Before.** Run `$C open-panel`, `$C gap`, `$C shot before`. Height is 214 with both services.
+- **Before.** Run `$C open-panel`, `$C gap`, `$C shot before`. Note the height with all three services.
 - **Turn off.** Run `$C open-settings Services`, then `$C send toggle Codex`. `$C settings` shows `disabledProviders = ['codex']`.
-- **Reopen.** Run `$C close-settings`, `$C open-panel`, `$C gap`, `$C region off`, `$C shot off`. Height is 147, smaller than before, and the gap is 2. In `off-region.png` the panel sits directly under the menu bar, with no blank band above or below it. `off-tree.json` has no `Codex`.
-- **Turn on.** Run `$C close-panel`, `$C open-settings Services`, `$C send toggle Codex`, `$C wait-idle`, `$C close-settings`, `$C open-panel`, `$C gap`, `$C close-panel`. Height is 214 again.
+- **Reopen.** Run `$C close-settings`, `$C open-panel`, `$C gap`, `$C region off`, `$C shot off`. Height is smaller than before, and the gap is 2. In `off-region.png` the panel sits directly under the menu bar, with no blank band above or below it. `off-tree.json` has no `Codex`.
+- **Turn on.** Run `$C close-panel`, `$C open-settings Services`, `$C send toggle Codex`, `$C wait-idle`, `$C close-settings`, `$C open-panel`, `$C gap`, `$C close-panel`. Height is back to the first one.
 
 ## Gotchas
 

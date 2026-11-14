@@ -5,7 +5,7 @@ description: Launch and drive a disposable copy of Noonchi (the macOS menu bar a
 
 # Verify Noonchi
 
-Noonchi has no window of its own: the user sees a menu bar item, a panel under it, and a Settings window. `control-noonchi` runs a copy with its own bundle ID, its own home folder, and fake `claude` and `codex` commands, and operates it through a driver compiled in only for this build.
+Noonchi has no window of its own: the user sees a menu bar item, a panel under it, and a Settings window. `control-noonchi` runs a copy with its own bundle ID, its own home folder, and fake `claude`, `codex`, and `agy` commands, and operates it through a driver compiled in only for this build.
 
 Run commands from the repo root.
 
@@ -19,7 +19,7 @@ The feature recipes are in [`features/README.md`](features/README.md). Read the 
 
 | Real | Replaced |
 |---|---|
-| Status item, panel, Settings, the update window, every control the driver presses | The `claude` and `codex` executables (through `NOONCHI_CLAUDE_PATH`, `NOONCHI_CODEX_PATH`) |
+| Status item, panel, Settings, the update window, every control the driver presses | The `claude`, `codex`, and `agy` executables (through `NOONCHI_CLAUDE_PATH`, `NOONCHI_CODEX_PATH`, `NOONCHI_AGY_PATH`) |
 | PTY capture, screen replay, parser, JSON-RPC client, UsageStore, saved settings | Home folder (`CFFIXED_USER_HOME`), bundle ID (`.verify`), GitHub (a local server), and app activation |
 
 The fakes are the only mocks: they sit at the boundary where the app already talks to an outside program. A pass here doesn't prove the real CLIs still answer the same way. When a change touches parsing or CLI behavior, also run the live check under Evidence.
@@ -31,7 +31,7 @@ $C build     # once per code change; output in .build/verify-app, no effect on d
 $C start     # prints "ready: run <id>, pid <n>" when every service has answered
 ```
 
-`start` begins from clean settings, `language=en`, Claude at 5h 5% / week 26% / Fable 2%, and Codex Free at 7%. Pass settings to change that: `$C start language=ko menuBar.mode=custom`.
+`start` begins from clean settings, `language=en`, Claude at 5h 5% / week 26% / Fable 2%, Codex Free at 7%, and Antigravity at Gemini 5h 12% / Gemini 8% / Claude·GPT 5h 30% / Claude·GPT 15% / Argon 3%. Pass settings to change that: `$C start language=ko menuBar.mode=custom`.
 
 Only one run at a time; `start` refuses while one is active.
 
@@ -63,6 +63,7 @@ It fails unless the driver answers, the bundle ID is the verification one, and t
 | `$C wait-idle` | Waits until nothing is loading, with no window |
 | `$C set-claude 5h=86 week=24 Fable=9` | What `/usage` shows on the next read. Add `note=rate-limited` for the model-caps-unavailable notice. Also `not-logged-in`, `hang`, `old-cli` (rejects flags), `enter-lost` (first Enter does nothing) |
 | `$C set-codex free=7`, `$C set-codex plus=18,41` | One 30-day window, or 5-hour and weekly. Also `not-logged-in`, `hang` |
+| `$C set-agy gemini5h=30 gemini=20 3p5h=60 3p=40 argon=10` | Used percents for the next read; omitted ones are 0. Also `not-logged-in` (prints the sign-in prompt, runs `open https://example.invalid`, which should hit the app's no-op `open`, and waits 60 s) |
 | `$C send press <label>` | Presses a button, menu item, popup, or chip by its visible label |
 | `$C send toggle <text>` | Presses the switch next to that text |
 | `$C send segment <label>` | Picks a segment, e.g. `Custom` |
