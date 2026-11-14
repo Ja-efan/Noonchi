@@ -76,7 +76,7 @@ make install      # 빌드 → ~/Applications 설치 → 실행
 
 **내려받기.** [Releases](https://github.com/Ja-efan/Noonchi/releases/latest)에서 `Noonchi-x.y.z.zip`을 받아 압축을 풀고 `Noonchi.app`을 `~/Applications`로 옮깁니다. Apple 공증을 받지 않은 앱이라 첫 실행이 막힙니다. 한 번 실행을 시도한 뒤 시스템 설정 › 개인정보 보호 및 보안에서 **그래도 열기**를 누르세요.
 
-로그인 시 자동 실행은 설정 › 일반 › "로그인 시 열기"로 켭니다.
+로그인 시 자동 실행은 설정 › 일반 › "로그인 시 열기"로 켭니다. 패널을 처음 열면 이 설정을 켤지 한 번 물어봅니다.
 
 ### 업데이트
 

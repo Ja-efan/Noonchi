@@ -34,5 +34,5 @@ Each file starts with an H1 and one paragraph on the user-visible behavior, then
 - [Menu bar](./menu-bar.md) covers automatic and custom items, labels, icon styles, and high-usage color.
 - [Failed reads](./failed-reads.md) covers kept values, reasons, first failures, and recovery.
 - [Services on and off](./services.md) covers turning a service off, the panel resizing, and missing CLIs.
-- [Settings](./settings.md) covers saved choices, language, and bar color.
+- [Settings](./settings.md) covers saved choices, language, bar color, and the login prompt.
 - [Updates](./updates.md) covers checking, refusing bad downloads, and replacing the app.

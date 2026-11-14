@@ -194,6 +194,8 @@ cmd_start() {
   defaults write "$BUNDLE_ID" settingsVersion -int 2
   # Right of the user's own item, so a menu bar manager doesn't hide it.
   defaults write "$BUNDLE_ID" "NSStatusItem Preferred Position Item-0" -int 420
+  # Otherwise the first-launch login prompt tops every panel. Override with launchAtLogin.asked=false.
+  defaults write "$BUNDLE_ID" launchAtLogin.asked -bool true
   for pair in "$@"; do
     local key="${pair%%=*}" value="${pair#*=}"
     case "$value" in

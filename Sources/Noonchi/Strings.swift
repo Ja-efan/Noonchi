@@ -116,6 +116,10 @@ struct Strings {
     var systemColor: String { t("시스템", "System") }
     var launchAtLogin: String { t("로그인 시 열기", "Open at login") }
     var approveInSystemSettings: String { t("시스템 설정에서 허용하기…", "Allow in System Settings…") }
+    var launchAtLoginPrompt: String { t("로그인할 때 Noonchi를 자동으로 열까요?", "Open Noonchi automatically when you log in?") }
+    var turnOn: String { t("켜기", "Turn On") }
+    var notNow: String { t("괜찮아요", "Not Now") }
+    var changeInSettingsAnytime: String { t("설정에서 언제든 바꿀 수 있어요", "You can change this in Settings anytime") }
     var other: String { t("기타", "Other") }
     func used(_ percent: Int) -> String { t("\(percent)% 사용", "\(percent)% used") }
     func resetsAt(_ time: String) -> String { t("\(time) 초기화", "resets \(time)") }

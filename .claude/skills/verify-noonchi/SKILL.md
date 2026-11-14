@@ -31,7 +31,7 @@ $C build     # once per code change; output in .build/verify-app, no effect on d
 $C start     # prints "ready: run <id>, pid <n>" when every service has answered
 ```
 
-`start` begins from clean settings, `language=en`, Claude at 5h 5% / week 26% / Fable 2%, Codex Free at 7%, and Antigravity at Gemini 5h 12% / Gemini 8% / Claude·GPT 5h 30% / Claude·GPT 15% / Argon 3%. Pass settings to change that: `$C start language=ko menuBar.mode=custom`.
+`start` begins from clean settings, `language=en`, Claude at 5h 5% / week 26% / Fable 2%, Codex Free at 7%, and Antigravity at Gemini 5h 12% / Gemini 8% / Claude·GPT 5h 30% / Claude·GPT 15% / Argon 3%. It also marks the first-launch login prompt as answered, so the panel doesn't show it. Pass settings to change that: `$C start language=ko menuBar.mode=custom`, or `$C start launchAtLogin.asked=false` for the prompt.
 
 Only one run at a time; `start` refuses while one is active.
 
@@ -109,7 +109,7 @@ Ends this run's app and fakes (matched by this run's folder, never by process na
 
 - **Never run the installed app's bundle, `make install`, or `make run` to verify.** They use the user's settings, and writing `io.github.ja-efan.noonchi` has overwritten real choices before.
 - **Never run `defaults` against `io.github.ja-efan.noonchi`.** Only the `.verify` domain, and let the helper do it.
-- **Don't press `Open at login` with this build.** It registers with the system, and macOS keeps a disabled record of the deleted test app that `stop` can't remove. It's also why macOS may notify the user. It was checked once: an update keeps the login item.
+- **Don't press `Open at login` or the panel's `Turn On` with this build.** It registers with the system, and macOS keeps a disabled record of the deleted test app that `stop` can't remove. It's also why macOS may notify the user. It was checked once: an update keeps the login item.
 - **Say what you couldn't prove.** Only after trying the workarounds here, and name what you tried.
 - **The user is probably working on this Mac.** Each stretch the app holds the keyboard is logged, and `$C stop` prints them. Don't measure this with `lsappinfo front`: the panel takes the keyboard without changing the frontmost app, so that reads zero while the user can't type. This build also doesn't prove that a real window comes to the front. Keep it that way:
   - Check values with `$C state` and `$C send status-image <path>`. They open nothing.

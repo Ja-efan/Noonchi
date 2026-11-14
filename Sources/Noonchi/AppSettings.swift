@@ -43,6 +43,7 @@ final class AppSettings: ObservableObject {
         static let knownWindows = "knownWindows"
         static let disabled = "disabledProviders"
         static let refreshMinutes = "refreshMinutes"
+        static let askedAboutLaunchAtLogin = "launchAtLogin.asked"
         static let version = "settingsVersion"
     }
 
@@ -58,6 +59,7 @@ final class AppSettings: ObservableObject {
     @Published var barColorHex: String? { didSet { defaults.set(barColorHex ?? "system", forKey: Key.barColor) } }
     @Published var disabledProviders: Set<String> { didSet { defaults.set(Array(disabledProviders), forKey: Key.disabled) } }
     @Published var refreshInterval: RefreshInterval { didSet { defaults.set(refreshInterval.minutes, forKey: Key.refreshMinutes) } }
+    @Published var askedAboutLaunchAtLogin: Bool { didSet { defaults.set(askedAboutLaunchAtLogin, forKey: Key.askedAboutLaunchAtLogin) } }
     /// Window IDs seen per service and when, so they can be picked before the next refresh.
     @Published private(set) var knownWindows: [String: [String: Date]] {
         didSet { defaults.set(knownWindows, forKey: Key.knownWindows) }
@@ -77,6 +79,7 @@ final class AppSettings: ObservableObject {
         barColorHex = d.string(forKey: Key.barColor).flatMap { $0 == "system" ? nil : $0 }
         disabledProviders = Set(d.stringArray(forKey: Key.disabled) ?? [])
         refreshInterval = RefreshInterval(saved: d.object(forKey: Key.refreshMinutes) as? Int)
+        askedAboutLaunchAtLogin = d.bool(forKey: Key.askedAboutLaunchAtLogin)
         knownWindows = d.dictionary(forKey: Key.knownWindows) as? [String: [String: Date]] ?? [:]
     }
 

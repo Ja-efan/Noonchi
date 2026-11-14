@@ -1,6 +1,5 @@
 import SwiftUI
 import AppKit
-import ServiceManagement
 import UsageCore
 
 /// Settings live in their own window so the menu bar panel never changes size.
@@ -41,9 +40,7 @@ struct SettingsView: View {
 
 private struct GeneralSettings: View {
     @ObservedObject var settings: AppSettings
-    /// Read from the system; the app doesn't store it.
-    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
-    @State private var needsApproval = SMAppService.mainApp.status == .requiresApproval
+    @State private var loginItem = LaunchAtLogin.status
 
     private var s: Strings { settings.strings }
 
@@ -115,9 +112,9 @@ private struct GeneralSettings: View {
                 Picker(s.languageLabel, selection: $settings.language) {
                     ForEach(AppLanguage.allCases) { Text($0.displayName).tag($0) }
                 }
-                Toggle(s.launchAtLogin, isOn: Binding(get: { launchAtLogin }, set: setLaunchAtLogin))
-                if needsApproval {
-                    Button(s.approveInSystemSettings) { SMAppService.openSystemSettingsLoginItems() }
+                Toggle(s.launchAtLogin, isOn: Binding(get: { loginItem == .enabled }, set: { loginItem = LaunchAtLogin.set($0); settings.askedAboutLaunchAtLogin = true }))
+                if loginItem == .requiresApproval {
+                    Button(s.approveInSystemSettings) { LaunchAtLogin.openSystemSettings() }
                         .font(.caption)
                 }
             }
@@ -141,13 +138,6 @@ private struct GeneralSettings: View {
             return true
         }
         return image
-    }
-
-    private func setLaunchAtLogin(_ on: Bool) {
-        let service = SMAppService.mainApp
-        try? on ? service.register() : service.unregister()
-        launchAtLogin = service.status == .enabled
-        needsApproval = service.status == .requiresApproval
     }
 }
 

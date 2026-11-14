@@ -146,6 +146,34 @@ struct PaceLine: View {
     }
 }
 
+/// Offers "Open at login" once, for people who wouldn't look for it in Settings.
+struct LaunchAtLoginPrompt: View {
+    @ObservedObject var settings: AppSettings
+
+    var body: some View {
+        let s = settings.strings
+        VStack(alignment: .leading, spacing: 6) {
+            Text(s.launchAtLoginPrompt)
+                .font(.system(size: 12))
+            HStack(spacing: 8) {
+                Button(s.turnOn) {
+                    if LaunchAtLogin.set(true) == .requiresApproval { LaunchAtLogin.openSystemSettings() }
+                    settings.askedAboutLaunchAtLogin = true
+                }
+                Button(s.notNow) { settings.askedAboutLaunchAtLogin = true }
+                    .buttonStyle(.borderless)
+            }
+            .controlSize(.small)
+            Text(s.changeInSettingsAnytime)
+                .font(.system(size: 11))
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 12)
+        .padding(.bottom, 10)
+    }
+}
+
 /// Reports the height of the whole panel.
 private struct PanelHeightKey: PreferenceKey {
     static var defaultValue: CGFloat = 0
@@ -190,6 +218,10 @@ struct PanelView: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
+                    if !settings.askedAboutLaunchAtLogin && LaunchAtLogin.status != .enabled {
+                        LaunchAtLoginPrompt(settings: settings)
+                        Divider()
+                    }
                     if store.shown.isEmpty {
                         Text(s.noProviders)
                             .font(.system(size: 12)).foregroundStyle(.secondary)
@@ -204,6 +236,9 @@ struct PanelView: View {
                 .background(GeometryReader { g in
                     Color.clear.preference(key: ContentHeightKey.self, value: g.size.height)
                 })
+                .onAppear {
+                    if LaunchAtLogin.status == .enabled { settings.askedAboutLaunchAtLogin = true }
+                }
             }
             // A ScrollView has no natural height inside a menu bar panel, so size it
             // to the measured content (capped); otherwise it collapses to zero.

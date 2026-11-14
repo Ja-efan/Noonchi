@@ -9,10 +9,12 @@ Settings has General and Services tabs. Choices save immediately and survive a r
 - `set-refresh` changes how often services are read, and reads pause while the screen is off.
 - `set-persist` keeps choices after a restart.
 - `set-language` switches all text between English and Korean.
+- `set-login-prompt` offers Open at login once, at the top of the panel.
 
 ## How to get to it (user POV)
 
 - Panel > ⋯ > Settings….
+- The login prompt is at the top of the panel until it's answered.
 
 ## Driving it with control-noonchi
 
@@ -25,10 +27,11 @@ Preconditions: `$C start` has returned.
 - **Bounds.** Run `$C send type 500`, then `$C settings`: `refreshMinutes = 120`. Run `$C send type 0`: 1. Run `$C send type abc`: unchanged. Run `$C send step up`: one more.
 - **Screen off.** Run `$C send screen off`, `$C set-claude 5h=44 week=44`, `$C send tick`, `$C wait-idle`, `$C state`. The value hasn't changed. Run `$C send screen on`, `$C wait-idle`, `$C state`. It reads 44.
 - **Language.** Run `$C stop`, `$C start language=ko`, `$C open-panel`. The tree has `5시간, 5% 사용`.
+- **Login prompt.** Run `$C stop`, `$C start launchAtLogin.asked=false`, `$C open-panel`, `$C shot login-prompt`. The prompt is above Claude. Run `$C send press "Not Now"`, then `$C settings`: `launchAtLogin.asked = True`. Run `$C close-panel`, `$C open-panel`, `$C shot login-prompt-gone`. The prompt is gone.
 
 ## Gotchas
 
-- Never press `Open at login` here. It registers with the system.
+- Never press `Open at login` or the prompt's `Turn On` here. Both register with the system.
 - `$C stop` deletes the settings domain, so a restart inside one run isn't available yet: report `set-persist` as not covered, or stop the app with the run's pid and relaunch by hand.
 - `screen off` stands in for the real lock notification, so this doesn't prove macOS delivers it. Gaps in the history of a locked night do.
 - Popups are pressed by their current value (`System`, `Symbol`, `English`), and the value changes after a pick.

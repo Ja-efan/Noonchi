@@ -78,7 +78,7 @@ make install      # build → install to ~/Applications → launch
 
 **Download.** Get `Noonchi-x.y.z.zip` from [Releases](https://github.com/Ja-efan/Noonchi/releases/latest), unzip it, and move `Noonchi.app` to `~/Applications`. The app isn't notarized by Apple, so macOS blocks the first launch: try to open it once, then click **Open Anyway** in System Settings › Privacy & Security.
 
-To start it at login, turn on Settings › General › "Open at login".
+To start it at login, turn on Settings › General › "Open at login". The first time you open the panel, Noonchi offers to turn it on for you.
 
 ### Updating
 
