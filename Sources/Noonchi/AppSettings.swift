@@ -144,11 +144,15 @@ final class AppSettings: ObservableObject {
     }
 
     /// Windows that can be picked for a service, short to long, or in `order` first when given.
-    func choices(for id: ProviderID, order: [String] = []) -> [String] {
-        (knownWindows[id.rawValue] ?? [:]).keys.sorted { a, b in
-            let (i, j) = (order.firstIndex(of: a) ?? .max, order.firstIndex(of: b) ?? .max)
-            return i != j ? i < j : UsageWindow.sortKey(id: a) < UsageWindow.sortKey(id: b)
-        }
+    /// The latest reading's windows in its order, plus picks it no longer has so they can be
+    /// unpicked. Before the first reading, the windows seen in the last week.
+    func choices(for id: ProviderID, current: [String]?) -> [String] {
+        let known = (knownWindows[id.rawValue] ?? [:]).keys.sorted { UsageWindow.sortKey(id: $0) < UsageWindow.sortKey(id: $1) }
+        guard let current else { return known }
+        let prefix = id.rawValue + ":"
+        let missingPicks = menuBarItems.filter { $0.hasPrefix(prefix) }.map { String($0.dropFirst(prefix.count)) }
+            .filter { !current.contains($0) }
+        return current + missingPicks
     }
 
     func menuBarItems(for store: UsageStore) -> [MenuBarItem] {

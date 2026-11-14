@@ -170,7 +170,7 @@ private struct ServiceSettings: View {
                             if groups.isEmpty {
                                 Text(s.afterFirstRefresh).font(.caption).foregroundStyle(.secondary)
                             } else {
-                                HStack(spacing: 6) {
+                                ChipFlow {
                                     ForEach(groups, id: \.title) { group in
                                         chip(group.title, on: settings.isGroupShown(provider.id, group.title)) {
                                             settings.toggleGroup(provider.id, group.title)
@@ -184,11 +184,11 @@ private struct ServiceSettings: View {
 
                     if settings.menuBarMode == .custom, path != nil, settings.isEnabled(provider.id) {
                         LabeledContent(s.menuBarItems) {
-                            let choices = settings.choices(for: provider.id, order: groups.isEmpty ? [] : usage?.windows.map(\.id) ?? [])
+                            let choices = settings.choices(for: provider.id, current: usage?.windows.map(\.id))
                             if choices.isEmpty {
                                 Text(s.afterFirstRefresh).font(.caption).foregroundStyle(.secondary)
                             } else {
-                                HStack(spacing: 6) {
+                                ChipFlow {
                                     ForEach(choices, id: \.self) { window in
                                         chip(s.windowLabel(id: window), on: settings.isSelected(provider.id, window)) {
                                             settings.toggle(provider.id, window)
@@ -208,6 +208,8 @@ private struct ServiceSettings: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 11))
+                .lineLimit(1)
+                .fixedSize()
                 .padding(.horizontal, 8).padding(.vertical, 2)
                 .foregroundStyle(on ? Color(nsColor: .windowBackgroundColor) : .primary)
                 .background(on ? Color.primary : .clear, in: Capsule())
@@ -221,5 +223,49 @@ private struct ServiceSettings: View {
     private static func abbreviate(_ path: String) -> String {
         let home = NSHomeDirectory()
         return path.hasPrefix(home) ? "~" + path.dropFirst(home.count) : path
+    }
+}
+
+/// Chips left to right, wrapping to a new line instead of squeezing a chip's text.
+private struct ChipFlow: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = rows(subviews, width: proposal.width ?? .infinity)
+        let width = rows.map { $0.width }.max() ?? 0
+        let height = rows.map(\.height).reduce(0, +) + spacing * CGFloat(max(rows.count - 1, 0))
+        return CGSize(width: width, height: height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = bounds.minY
+        for row in rows(subviews, width: bounds.width) {
+            // Trailing, like the controls on the other rows of this form.
+            var x = bounds.maxX - row.width
+            for index in row.indices {
+                let size = subviews[index].sizeThatFits(.unspecified)
+                subviews[index].place(at: CGPoint(x: x, y: y), proposal: .unspecified)
+                x += size.width + spacing
+            }
+            y += row.height + spacing
+        }
+    }
+
+    private struct Row { var indices: [Int] = []; var width: CGFloat = 0; var height: CGFloat = 0 }
+
+    private func rows(_ subviews: Subviews, width: CGFloat) -> [Row] {
+        var rows = [Row()]
+        for (index, subview) in subviews.enumerated() {
+            let size = subview.sizeThatFits(.unspecified)
+            let added = rows[rows.count - 1].indices.isEmpty ? size.width : rows[rows.count - 1].width + spacing + size.width
+            if added > width, !rows[rows.count - 1].indices.isEmpty {
+                rows.append(Row(indices: [index], width: size.width, height: size.height))
+            } else {
+                rows[rows.count - 1].indices.append(index)
+                rows[rows.count - 1].width = added
+                rows[rows.count - 1].height = max(rows[rows.count - 1].height, size.height)
+            }
+        }
+        return rows
     }
 }
