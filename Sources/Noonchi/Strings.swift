@@ -126,6 +126,7 @@ struct Strings {
     var notInstalled: String { t("설치되지 않음", "Not installed") }
     var menuBarItems: String { t("상단 바 항목", "Menu bar items") }
     var panelGroups: String { t("패널 그룹", "Panel groups") }
+    var modelsInGroups: String { t("그룹별 모델", "Models in each group") }
     var afterFirstRefresh: String { t("첫 조회 뒤에 나타나요", "Appear after the first refresh") }
     var refreshEvery: String { t("새로고침 주기", "Refresh every") }
     var minutesUnit: String { t("분", "min") }

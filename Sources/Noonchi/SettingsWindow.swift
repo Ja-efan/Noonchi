@@ -166,7 +166,7 @@ private struct ServiceSettings: View {
                     let usage = store.states[provider.id]?.usage
                     let groups = usage?.groups ?? []
                     if path != nil, settings.isEnabled(provider.id), !groups.isEmpty || (usage == nil && provider is AntigravityProvider) {
-                        LabeledContent(s.panelGroups) {
+                        LabeledContent {
                             if groups.isEmpty {
                                 Text(s.afterFirstRefresh).font(.caption).foregroundStyle(.secondary)
                             } else {
@@ -178,6 +178,12 @@ private struct ServiceSettings: View {
                                         .help(group.detail ?? group.title)
                                     }
                                 }
+                            }
+                        } label: {
+                            HStack(spacing: 4) {
+                                Text(s.panelGroups)
+                                let models = groups.compactMap { g in g.detail.flatMap { $0 == g.title ? nil : "\(g.title): \($0)" } }
+                                if !models.isEmpty { GroupModelsHelp(label: s.modelsInGroups, lines: models) }
                             }
                         }
                     }
@@ -223,6 +229,28 @@ private struct ServiceSettings: View {
     private static func abbreviate(_ path: String) -> String {
         let home = NSHomeDirectory()
         return path.hasPrefix(home) ? "~" + path.dropFirst(home.count) : path
+    }
+}
+
+/// A small "?" that lists which models each group covers, since "Gemini" alone doesn't say.
+private struct GroupModelsHelp: View {
+    let label: String
+    let lines: [String]
+    @State private var shown = false
+
+    var body: some View {
+        Button { shown.toggle() } label: {
+            Image(systemName: "questionmark.circle").font(.system(size: 11)).foregroundStyle(.secondary)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+        .help(label)
+        .popover(isPresented: $shown, arrowEdge: .bottom) {
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(lines, id: \.self) { Text($0).font(.caption) }
+            }
+            .padding(10)
+        }
     }
 }
 

@@ -9,6 +9,7 @@ Settings > Services lists each service with its path and a switch. Turning one o
 - `svc-resize` keeps the panel fitted to its content, with no blank band. Regression: the window used to keep its old height.
 - `svc-chips` shows menu bar choices per service in custom mode.
 - `svc-groups` hides an Antigravity quota group from the panel and the menu bar.
+- `svc-group-models` lists the models in each Antigravity group from the "?" next to "Panel groups".
 
 ## How to get to it (user POV)
 
@@ -24,6 +25,7 @@ Preconditions: `$C start` has returned.
 - **Reopen.** Run `$C close-settings`, `$C open-panel`, `$C gap`, `$C region off`, `$C shot off`. Height is smaller than before, and the gap is 2. In `off-region.png` the panel sits directly under the menu bar, with no blank band above or below it. `off-tree.json` has no `Codex`.
 - **Turn on.** Run `$C close-panel`, `$C open-settings Services`, `$C send toggle Codex`, `$C wait-idle`, `$C close-settings`, `$C open-panel`, `$C gap`, `$C close-panel`. Height is back to the first one.
 - **Hide a group.** Run `$C open-settings Services`, `$C send press "Claude·GPT"`, `$C settings`. It shows `panel.hiddenGroups = {'antigravity': ['Claude·GPT']}`. Run `$C close-settings`, `$C open-panel`, `$C shot groups`. Antigravity shows `Gemini 5h`, `Gemini`, and `Argon`, with no `Claude·GPT` row. With the default fake (3p5h=30 above gemini5h=12) the menu bar's Antigravity number reads 12. Press the chip again to bring the rows back.
+- **Group models.** Run `$C open-settings Services`, `$C send press "Models in each group"`, `$C shot models`. A popover under the "?" lists `Gemini: Gemini 4 Neon, …`, `Claude·GPT: …`, and `Argon: Gemini 4 Argon`, sized to its lines.
 
 ## Gotchas
 
