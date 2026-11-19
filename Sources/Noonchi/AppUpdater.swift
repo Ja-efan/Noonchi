@@ -164,7 +164,7 @@ struct UpdateView: View {
             case .available(let release, let current):
                 let installable = AppUpdater.installsUpdates && release.download != nil
                 message(s.updateAvailable(release.version.description),
-                        installable ? s.updateInstallNote(current.description)
+                        installable ? s.updateCurrent(current.description)
                                     : AppUpdater.installsUpdates ? s.updateManual : s.updateFromSource)
                 buttons {
                     Button(s.updateChanges) { NSWorkspace.shared.open(release.pageURL) }
