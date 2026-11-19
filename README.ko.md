@@ -52,7 +52,7 @@ v0.3에서 상단 바 항목을 직접 골랐다면 업데이트 후에도 같�
 
 - **Claude Code**: 조회할 때마다 백그라운드에서 `claude`를 가상 터미널(PTY)로 실행해 `/usage`를 보내고(그 실행에서는 MCP 서버를 켜지 않습니다, `--strict-mcp-config`), 갱신이 끝난 화면을 읽은 뒤 바로 종료합니다. 모델을 호출하지 않으므로 **토큰을 쓰지 않습니다.** 작업 폴더는 `~/Library/Application Support/Noonchi`입니다.
 - **Codex**: 조회할 때마다 `codex app-server`를 실행해 `account/rateLimits/read`로 한도를 묻고 종료합니다. 이메일을 돌려주는 `account/read`는 호출하지 않고, 응답의 계정 ID는 지운 뒤 씁니다.
-- **Antigravity**: 조회할 때마다 `agy -p /usage --output-format json`을 실행합니다. 모델을 호출하지 않습니다. 로그인되어 있지 않으면 CLI가 로그인용 브라우저를 열려고 하는데, Noonchi는 이를 막고 "로그인 필요"로 표시합니다. 설정 › 서비스에서 한도 그룹(Gemini (Hydrogen), Claude·GPT, Argon)을 골라 패널과 상단 바에서 숨길 수 있습니다.
+- **Antigravity**: 조회할 때마다 `agy -p /usage --output-format json`을 실행합니다. 모델을 호출하지 않습니다. 로그인되어 있지 않으면 CLI가 로그인용 브라우저를 열려고 하는데, Noonchi는 이를 막고 "로그인 필요"로 표시합니다. 설정 › 서비스에서 한도 그룹(Gemini, Claude·GPT, Argon)을 골라 패널과 상단 바에서 숨길 수 있습니다.
 - 설정한 주기마다, 그리고 앱을 켤 때, 잠자기에서 깨어날 때, 화면이 다시 켜질 때 조회합니다. 서비스마다 따로 읽으므로 한쪽이 느려도 다른 쪽은 갱신됩니다. 조회에 실패하면 마지막으로 읽은 값을 흐리게 두고 이유를 한 줄 표시합니다.
 - 설치되지 않은 서비스는 조회하지 않고 패널에도 나오지 않습니다.
 

@@ -23,10 +23,10 @@ final class AntigravityProviderTests: XCTestCase {
         let week = date("2026-11-21T07:48:52Z"), fiveHours = date("2026-11-14T12:48:52Z")
         let gemini = "Gemini 4 Hydrogen, Gemini 3.8 Flash", thirdParty = "Claude Opus 5.5, Claude Sonnet 5.5, GPT-OSS 120B"
         XCTAssertEqual(usage.windows, [
-            UsageWindow(id: "model:Gemini (Hydrogen) 5h", kind: .model(name: "Gemini (Hydrogen) 5h", minutes: 300), usedPercent: 0,
-                        resetsAt: fiveHours, group: "Gemini (Hydrogen)", groupDetail: gemini),
-            UsageWindow(id: "model:Gemini (Hydrogen)", kind: .model(name: "Gemini (Hydrogen)", minutes: 10080), usedPercent: 0,
-                        resetsAt: week, group: "Gemini (Hydrogen)", groupDetail: gemini),
+            UsageWindow(id: "model:Gemini 5h", kind: .model(name: "Gemini 5h", minutes: 300), usedPercent: 0,
+                        resetsAt: fiveHours, group: "Gemini", groupDetail: gemini),
+            UsageWindow(id: "model:Gemini", kind: .model(name: "Gemini", minutes: 10080), usedPercent: 0,
+                        resetsAt: week, group: "Gemini", groupDetail: gemini),
             UsageWindow(id: "model:Claude·GPT 5h", kind: .model(name: "Claude·GPT 5h", minutes: 300), usedPercent: 0,
                         resetsAt: fiveHours, group: "Claude·GPT", groupDetail: thirdParty),
             UsageWindow(id: "model:Claude·GPT", kind: .model(name: "Claude·GPT", minutes: 10080), usedPercent: 0,
@@ -34,9 +34,18 @@ final class AntigravityProviderTests: XCTestCase {
             UsageWindow(id: "model:Argon", kind: .model(name: "Argon", minutes: 10080), usedPercent: 0, resetsAt: week,
                         group: "Argon", groupDetail: "Gemini 4 Argon"),
         ])
-        XCTAssertEqual(usage.groups.map(\.title), ["Gemini (Hydrogen)", "Claude·GPT", "Argon"])
+        XCTAssertEqual(usage.groups.map(\.title), ["Gemini", "Claude·GPT", "Argon"])
         XCTAssertTrue(usage.raw.contains("gemini-argon-wtu-weekly"))
         XCTAssertFalse(usage.raw.contains("conversation_id"))
+    }
+
+    /// Recorded from agy 1.5.12: Gemini 4 Neon joined the shared Gemini group, not a group of its own.
+    func testNeonSharesTheGeminiGroup() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "agy-usage-1.5.12", withExtension: "json", subdirectory: "Fixtures"))
+        let usage = try AntigravityProvider.usage(from: Data(contentsOf: url)).get()
+        XCTAssertEqual(usage.groups.map(\.title), ["Gemini", "Claude·GPT", "Argon"])
+        let gemini = try XCTUnwrap(usage.windows.first { $0.group == "Gemini" })
+        XCTAssertEqual(gemini.groupDetail, "Gemini 4 Neon, Gemini 4 Hydrogen, Orchestrator (Neon), Gemini 3.8 Flash")
     }
 
     func testRemainingFractionBecomesUsedPercent() throws {
@@ -57,9 +66,9 @@ final class AntigravityProviderTests: XCTestCase {
           {"name":"Gemini Models","buckets":[{"id":"gemini-weekly","window":"weekly","remaining_fraction":1}]}]}}}
         """#
         let windows = try usage(json).get().windows
-        XCTAssertEqual(windows.map(\.id), ["model:Gemini (Hydrogen) 5h", "model:Gemini (Hydrogen)", "model:Gemini (Hydrogen) 2",
+        XCTAssertEqual(windows.map(\.id), ["model:Gemini 5h", "model:Gemini", "model:Gemini 2",
                                            "model:Carbon 5h", "model:Carbon"])
-        XCTAssertEqual(windows[2].group, "Gemini (Hydrogen)")
+        XCTAssertEqual(windows[2].group, "Gemini")
         XCTAssertEqual(windows[3].usedPercent, 20, accuracy: 0.001)
         XCTAssertEqual(windows[4].group, "Carbon")
     }
@@ -89,7 +98,7 @@ final class AntigravityProviderTests: XCTestCase {
         let carbon = usage.windows.filter { $0.group == "Carbon" }
         XCTAssertEqual(carbon.map(\.id), ["model:Carbon 5h", "model:Carbon"])
         XCTAssertEqual(carbon.map(\.kind), [.model(name: "Carbon 5h", minutes: 300), .model(name: "Carbon", minutes: 10080)])
-        XCTAssertEqual(usage.groups.map(\.title), ["Gemini (Hydrogen)", "Claude·GPT", "Argon", "Carbon"])
+        XCTAssertEqual(usage.groups.map(\.title), ["Gemini", "Claude·GPT", "Argon", "Carbon"])
     }
 
     func testBlankGroupNameDerivesTitleFromFirstBucketID() throws {
@@ -105,7 +114,7 @@ final class AntigravityProviderTests: XCTestCase {
           {"name":" ","buckets":[{"id":"gemini-5h","window":"5h","remaining_fraction":1}]}]}}}
         """#
         let known = try usage(json).get()
-        XCTAssertEqual(known.groups.map(\.title), ["Argon", "Claude·GPT", "Gemini (Hydrogen)"])
+        XCTAssertEqual(known.groups.map(\.title), ["Argon", "Claude·GPT", "Gemini"])
     }
 
     func testUnknownGroupAndWindowKeepTheirOwnNames() throws {
@@ -155,17 +164,17 @@ final class AntigravityProviderTests: XCTestCase {
         let usage = try usage(json).get()
         let id = ProviderID("antigravity"), hidden = [id: Set(["Claude·GPT"])]
         XCTAssertEqual(usage.hidingGroups(["Claude·GPT"]).windows.map(\.id),
-                       ["model:Gemini (Hydrogen) 5h", "model:Gemini (Hydrogen)", "model:Argon"])
+                       ["model:Gemini 5h", "model:Gemini", "model:Argon"])
 
         func text(_ mode: MenuBarMode, _ selected: [String], _ hidden: [ProviderID: Set<String>]) -> [String] {
             MenuBarFormatter.items(for: [(id, state(usage))], mode: mode, selected: selected, labeled: true,
                                    highlightHigh: true, hiddenGroups: hidden).map(\.text)
         }
         XCTAssertEqual(text(.auto, [], [:]), ["Claude·GPT 5h 60%"])
-        XCTAssertEqual(text(.auto, [], hidden), ["Gemini (Hydrogen) 5h 30%"])
+        XCTAssertEqual(text(.auto, [], hidden), ["Gemini 5h 30%"])
         XCTAssertEqual(text(.custom, ["antigravity:model:Claude·GPT", "antigravity:model:Argon"], hidden), ["Argon 10%"])
-        XCTAssertEqual(text(.custom, ["antigravity:model:Claude·GPT"], hidden), ["Gemini (Hydrogen) 5h 30%"])
-        XCTAssertEqual(text(.auto, [], [id: ["Gemini (Hydrogen)", "Claude·GPT", "Argon"]]), [""])
+        XCTAssertEqual(text(.custom, ["antigravity:model:Claude·GPT"], hidden), ["Gemini 5h 30%"])
+        XCTAssertEqual(text(.auto, [], [id: ["Gemini", "Claude·GPT", "Argon"]]), [""])
     }
 
     func testServicesWithoutGroupsIgnoreHiddenGroups() {
@@ -215,6 +224,6 @@ final class AntigravityProviderTests: XCTestCase {
         let (result, _, _) = try read(fake: "cat '\(try fixtureURL().path)'")
         let usage = try result.get()
         XCTAssertEqual(usage.windows.map(\.id),
-                       ["model:Gemini (Hydrogen) 5h", "model:Gemini (Hydrogen)", "model:Claude·GPT 5h", "model:Claude·GPT", "model:Argon"])
+                       ["model:Gemini 5h", "model:Gemini", "model:Claude·GPT 5h", "model:Claude·GPT", "model:Argon"])
     }
 }

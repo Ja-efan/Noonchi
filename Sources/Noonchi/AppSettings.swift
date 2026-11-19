@@ -73,7 +73,7 @@ final class AppSettings: ObservableObject {
     private init() {
         let d = UserDefaults.standard
         Self.migrateFromOldBundleID(into: d)
-        Self.migrateToV2(d)
+        Self.migrate(d)
         language = d.string(forKey: Key.language).flatMap(AppLanguage.init) ?? .systemDefault
         menuBarMode = d.string(forKey: Key.mode).flatMap(MenuBarMode.init) ?? .auto
         menuBarValue = d.string(forKey: Key.value).flatMap(MenuBarValue.init) ?? .used
@@ -99,12 +99,17 @@ final class AppSettings: ObservableObject {
         }
     }
 
-    /// v0.3 had one service; see `SettingsMigration`.
-    private static func migrateToV2(_ d: UserDefaults) {
-        guard d.integer(forKey: Key.version) < SettingsMigration.version else { return }
-        let old = Dictionary(uniqueKeysWithValues: SettingsMigration.oldKeys.compactMap { k in d.object(forKey: k).map { (k, $0) } })
-        for (key, value) in SettingsMigration.toV2(old) { d.set(value, forKey: key) }
-        SettingsMigration.oldKeys.forEach(d.removeObject)
+    /// See `SettingsMigration`: v2 moved v0.3's single-service keys, v3 renamed an Antigravity group.
+    private static func migrate(_ d: UserDefaults) {
+        let saved = d.integer(forKey: Key.version)
+        guard saved < SettingsMigration.version else { return }
+        if saved < 2 {
+            let old = Dictionary(uniqueKeysWithValues: SettingsMigration.oldKeys.compactMap { k in d.object(forKey: k).map { (k, $0) } })
+            for (key, value) in SettingsMigration.toV2(old) { d.set(value, forKey: key) }
+            SettingsMigration.oldKeys.forEach(d.removeObject)
+        }
+        let current = Dictionary(uniqueKeysWithValues: SettingsMigration.v3Keys.compactMap { k in d.object(forKey: k).map { (k, $0) } })
+        for (key, value) in SettingsMigration.toV3(current) { d.set(value, forKey: key) }
         d.set(SettingsMigration.version, forKey: Key.version)
     }
 

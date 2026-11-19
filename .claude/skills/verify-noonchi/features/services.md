@@ -23,7 +23,7 @@ Preconditions: `$C start` has returned.
 - **Turn off.** Run `$C open-settings Services`, then `$C send toggle Codex`. `$C settings` shows `disabledProviders = ['codex']`.
 - **Reopen.** Run `$C close-settings`, `$C open-panel`, `$C gap`, `$C region off`, `$C shot off`. Height is smaller than before, and the gap is 2. In `off-region.png` the panel sits directly under the menu bar, with no blank band above or below it. `off-tree.json` has no `Codex`.
 - **Turn on.** Run `$C close-panel`, `$C open-settings Services`, `$C send toggle Codex`, `$C wait-idle`, `$C close-settings`, `$C open-panel`, `$C gap`, `$C close-panel`. Height is back to the first one.
-- **Hide a group.** Run `$C open-settings Services`, `$C send press "Claude·GPT"`, `$C settings`. It shows `panel.hiddenGroups = {'antigravity': ['Claude·GPT']}`. Run `$C close-settings`, `$C open-panel`, `$C shot groups`. Antigravity shows `Gemini (Hydrogen) 5h`, `Gemini (Hydrogen)`, and `Argon`, with no `Claude·GPT` row. With the default fake (3p5h=30 above gemini5h=12) the menu bar's Antigravity number reads 12. Press the chip again to bring the rows back.
+- **Hide a group.** Run `$C open-settings Services`, `$C send press "Claude·GPT"`, `$C settings`. It shows `panel.hiddenGroups = {'antigravity': ['Claude·GPT']}`. Run `$C close-settings`, `$C open-panel`, `$C shot groups`. Antigravity shows `Gemini 5h`, `Gemini`, and `Argon`, with no `Claude·GPT` row. With the default fake (3p5h=30 above gemini5h=12) the menu bar's Antigravity number reads 12. Press the chip again to bring the rows back.
 
 ## Gotchas
 

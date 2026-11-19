@@ -66,7 +66,7 @@ extension AgyUsageResponse {
             return group.buckets.first.map { bucketTitle($0.id) } ?? ""
         }
         switch name {
-        case "Gemini Models": return "Gemini (Hydrogen)"
+        case "Gemini Models": return "Gemini"
         case "Claude and GPT models": return "Claude·GPT"
         default: return name.hasPrefix("Gemini 4 ") ? String(name.dropFirst("Gemini 4 ".count)) : name
         }
@@ -77,7 +77,7 @@ extension AgyUsageResponse {
             ("gemini-carbon-", "Carbon"),
             ("gemini-argon-", "Argon"),
             ("3p-", "Claude·GPT"),
-            ("gemini-", "Gemini (Hydrogen)"),
+            ("gemini-", "Gemini"),
         ]
         return prefixes.first { id.hasPrefix($0.0) }?.1 ?? id
     }

@@ -156,7 +156,7 @@ def bucket(id, key, window):
     return {"id": id, "name": "Limit Remaining", "window": window, "remaining_fraction": 1 - used[key] / 100,
             "reset_time": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(reset))}
 groups = [
-    {"name": "Gemini Models", "description": "Models within this group: Gemini 4 Hydrogen, Gemini 3.8 Flash",
+    {"name": "Gemini Models", "description": "Models within this group: Gemini 4 Neon, Gemini 4 Hydrogen, Orchestrator (Neon), Gemini 3.8 Flash",
      "buckets": [bucket("gemini-weekly", "gemini", "weekly"), bucket("gemini-5h", "gemini5h", "5h")]},
     {"name": "Claude and GPT models", "description": "Models within this group: Claude Opus 5.5, Claude Sonnet 5.5, GPT-OSS 120B",
      "buckets": [bucket("3p-weekly", "3p", "weekly"), bucket("3p-5h", "3p5h", "5h")]},

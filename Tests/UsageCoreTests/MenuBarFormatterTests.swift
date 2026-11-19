@@ -166,6 +166,18 @@ final class SettingsMigrationTests: XCTestCase {
         XCTAssertEqual(new["knownWindows"] as? [String: [String: Date]], ["claude": ["model:Fable": now]])
     }
 
+    func testOldGeminiGroupNameFollowsTheRename() {
+        let new = SettingsMigration.toV3([
+            "menuBar.items": ["claude:5h", "antigravity:model:Gemini (Hydrogen) 5h", "antigravity:model:Argon"],
+            "panel.hiddenGroups": ["antigravity": ["Gemini (Hydrogen)", "Argon"], "codex": ["x"]],
+            "knownWindows": ["antigravity": ["model:Gemini (Hydrogen)": now], "claude": ["5h": now]],
+        ])
+        XCTAssertEqual(new["menuBar.items"] as? [String], ["claude:5h", "antigravity:model:Gemini 5h", "antigravity:model:Argon"])
+        XCTAssertEqual(new["panel.hiddenGroups"] as? [String: [String]], ["antigravity": ["Gemini", "Argon"], "codex": ["x"]])
+        XCTAssertEqual(new["knownWindows"] as? [String: [String: Date]], ["antigravity": ["model:Gemini": now], "claude": ["5h": now]])
+        XCTAssertTrue(SettingsMigration.toV3([:]).isEmpty)
+    }
+
     func testUntouchedSettingsStayDefault() {
         XCTAssertTrue(SettingsMigration.toV2([:], now: now).isEmpty)
         // byUsage was the old default: new defaults (highlight on, system color) apply.

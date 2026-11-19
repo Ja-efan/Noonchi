@@ -1,9 +1,9 @@
 import Foundation
 
-/// Moves settings saved before multiple services (v0.3) to the current keys.
+/// Moves settings saved by older versions to the current keys.
 /// Pure so it can be tested; the app reads and writes UserDefaults around it.
 public enum SettingsMigration {
-    public static let version = 2
+    public static let version = 3
 
     /// Returns the new keys to set. Someone who picked menu bar items keeps them
     /// (custom mode), so their menu bar doesn't change.
@@ -28,6 +28,28 @@ public enum SettingsMigration {
         }
         return new
     }
+
+    /// v0.4.9 called Antigravity's shared Gemini group "Gemini (Hydrogen)". Neon joined it, so it is
+    /// "Gemini" now; hidden groups and menu bar picks under the old name follow. Takes and returns
+    /// the values of `v3Keys`.
+    public static func toV3(_ old: [String: Any]) -> [String: Any] {
+        let rename = { (s: String) in s.replacingOccurrences(of: "Gemini (Hydrogen)", with: "Gemini") }
+        var new: [String: Any] = [:]
+        if let items = old["menuBar.items"] as? [String] {
+            new["menuBar.items"] = items.map { $0.hasPrefix("antigravity:") ? rename($0) : $0 }
+        }
+        if var hidden = old["panel.hiddenGroups"] as? [String: [String]], let groups = hidden["antigravity"] {
+            hidden["antigravity"] = groups.map(rename)
+            new["panel.hiddenGroups"] = hidden
+        }
+        if var known = old["knownWindows"] as? [String: [String: Date]], let windows = known["antigravity"] {
+            known["antigravity"] = Dictionary(windows.map { (rename($0.key), $0.value) }, uniquingKeysWith: max)
+            new["knownWindows"] = known
+        }
+        return new
+    }
+
+    public static let v3Keys = ["menuBar.items", "panel.hiddenGroups", "knownWindows"]
 
     public static let oldKeys = ["menuBarItems", "labelStyle", "barColorMode", "barColorHex", "warnHighUsage", "knownModels"]
 }
