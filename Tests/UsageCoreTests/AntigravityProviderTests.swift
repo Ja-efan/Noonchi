@@ -48,6 +48,18 @@ final class AntigravityProviderTests: XCTestCase {
         XCTAssertEqual(gemini.groupDetail, "Gemini 4 Neon, Gemini 4 Hydrogen, Orchestrator (Neon), Gemini 3.8 Flash")
     }
 
+    /// Recorded from agy 1.5.18: Argon and Carbon moved into the Gemini group, and the unused
+    /// Claude·GPT group resets at the Unix epoch.
+    func testArgonAndCarbonShareTheGeminiGroup() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "agy-usage-1.5.18", withExtension: "json", subdirectory: "Fixtures"))
+        let usage = try AntigravityProvider.usage(from: Data(contentsOf: url)).get()
+        XCTAssertEqual(usage.groups.map(\.title), ["Gemini", "Claude·GPT"])
+        XCTAssertEqual(usage.windows.first { $0.group == "Gemini" }?.groupDetail,
+                       "Gemini 4 Neon, Gemini 4 Carbon, Gemini 4 Argon, Gemini 4 Hydrogen, Orchestrator (Neon), "
+                       + "Orchestrator (Carbon), Orchestrator (Argon), Gemini 3.8 Flash")
+        XCTAssertEqual(usage.windows.map(\.resetsAt), [date("2026-11-27T07:25:44Z"), date("2026-12-03T08:07:26Z"), nil, nil])
+    }
+
     func testRemainingFractionBecomesUsedPercent() throws {
         let json = group("Gemini Models", #"{"id":"gemini-5h","window":"5h","remaining_fraction":0.25,"reset_time":"2026-11-14T12:48:52.500Z"}"#)
         let window = try XCTUnwrap(usage(json).get().windows.first)

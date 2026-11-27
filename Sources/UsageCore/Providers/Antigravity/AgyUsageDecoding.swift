@@ -1,6 +1,6 @@
 import Foundation
 
-/// The part of `agy -p /usage --output-format json` the app uses (agy 1.5.9).
+/// The part of `agy -p /usage --output-format json` the app uses (agy 1.5.9 to 1.5.18).
 struct AgyUsageResponse: Decodable {
     let status: String
     let error: String?
@@ -112,10 +112,13 @@ extension AgyUsageResponse {
                            resetsAt: bucket.resetTime.flatMap(date), group: title, groupDetail: detail)
     }
 
+    /// A group not used yet resets at "1970-01-01T00:00:00Z" (agy 1.5.18), which means no reset
+    /// is scheduled, not one that has passed.
     private static func date(_ text: String) -> Date? {
         let plain = ISO8601DateFormatter()
         let fractional = ISO8601DateFormatter()
         fractional.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return plain.date(from: text) ?? fractional.date(from: text)
+        guard let date = plain.date(from: text) ?? fractional.date(from: text), date.timeIntervalSince1970 > 0 else { return nil }
+        return date
     }
 }
